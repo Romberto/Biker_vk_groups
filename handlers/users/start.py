@@ -1,8 +1,10 @@
+import asyncio
 from asyncio import sleep
 from pprint import pprint
 
 import requests
 from aiogram import types
+
 
 from buttons.key_board import kb_start
 from data.config import CHANAL_ID, DEPLOY, DEPLOY_POST, GROUP_IDs
@@ -35,18 +37,32 @@ async def go(message: types.Message):
                 if post[2]:
                     links = post[2].split(',')
                     for i, link in enumerate(links):
-                        print(link)
-                        print('*'*30)
+
                         if i == (len(links) - 1):
                             text_post = f"<b>Imperia's Wheels MCC</b>\n\n{text}"
-                            media.attach_photo(types.InputFile.from_url(link), caption=text_post,
+                            media.attach_photo(types.InputFile.from_url(link), caption=text_post[:1024],
                                                parse_mode=types.ParseMode.HTML)
                         else:
                             media.attach_photo(types.InputFile.from_url(link))
-                    await message.bot.send_media_group(chat_id=CHANAL_ID, media=media)
+                    try:
+                        await message.bot.send_media_group(chat_id=CHANAL_ID, media=media)
+                    except asyncio.TimeoutError:
+                        print('Запрос занял слишком много времени. Время ожидания истекло.')
+                        continue
+                    except Exception as e:
+                        print(f'Произошла ошибка при отправке сообщения: {e}')
+                        continue
+
                 else:
                     text_post = f"<b>Imperia's Wheels MCC</b>\n\n{text}"
-                    await message.bot.send_message(chat_id=CHANAL_ID, text=text_post, parse_mode=types.ParseMode.HTML)
+                    try:
+                        await message.bot.send_message(chat_id=CHANAL_ID, text=text_post, parse_mode=types.ParseMode.HTML)
+                    except asyncio.TimeoutError:
+                        print('Запрос занял слишком много времени. Время ожидания истекло.')
+                        continue
+                    except Exception as e:
+                        print(f'Произошла ошибка при отправке сообщения: {e}')
+                        continue
                 await adminDB.publish_post(post[0])
                 await sleep(DEPLOY_POST)
         else:
