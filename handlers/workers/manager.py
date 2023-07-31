@@ -1,3 +1,4 @@
+from asyncio import sleep
 from pprint import pprint
 import sqlite3
 
@@ -90,15 +91,18 @@ class AdminDB:
 
 
 
-async def get_all_well(GROUP_IDs: list):
+async def get_all_well(GROUP_IDs):
     session = vk_api.VkApi(token=token)
     vk = session.get_api()
-    for group in GROUP_IDs:
+    keys_list = list(GROUP_IDs.keys())
+    for group in keys_list:
         try:
+            await sleep(12)
             wall_posts = vk.wall.get(owner_id=group,
-                                     count=10, filter='owner', extended=1)  # Здесь count - количество получаемых записей (в данном примере 10)
+                                     count=4, filter='owner', extended=1)  # Здесь count - количество получаемых записей (в данном примере 10)
             adb = AdminDB()
             for post in wall_posts["items"]:
+
 
                 if post['attachments'] and 'text' in post:
                     photo_urls = []
@@ -113,11 +117,13 @@ async def get_all_well(GROUP_IDs: list):
                             photo_str = ",".join(photo_urls)
                         id = int(group) + post['id']
                         video_str = ''
-                        await adb.add_row(id, post['text'], photo_str, 0, video_str)
+                        post_text = post['text'] + "*//*" + GROUP_IDs[group] +'*//*' + group[1:]
+                        await adb.add_row(id, post_text, photo_str, 0, video_str)
                         #except Exception as error:
                         #    print("Ошибка в методе get_all_well, при сожранение строки в базу данных:", error)
         except vk_api.VkApiError as e:
             print("API error:", e)
+
 
 
 def get_diveo(url):
