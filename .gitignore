@@ -1,3 +1,4 @@
 env
 .env
 mydatapost.db
+my_alchemy.db
