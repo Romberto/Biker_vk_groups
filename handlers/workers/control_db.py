@@ -21,36 +21,35 @@ class DBAlchemy:
 
     # сохраняем данные в базу
     async def add_new_data(self, id, text, photo):
-        session = await self.session()
-
-        data = Post(id=id, text=text, photo=photo, publish=0)
-        try:
-            session.add(data)
-            session.commit()
-        except IntegrityError as e:
-            session.rollback()  # Откатываем транзакцию
+        with await self.session() as session:
+            data = Post(id=id, text=text, photo=photo, publish=0)
+            try:
+                session.add(data)
+                session.commit()
+            except IntegrityError as e:
+                session.rollback()  # Откатываем транзакцию
 
     # получаем все неопубликованные посты
     async def get_not_publish_post(self):
-        session = await self.session()
-        posts = session.query(Post).filter_by(publish=0).all()
-        return posts
+        with await self.session() as session:
+            posts = session.query(Post).filter_by(publish=0).all()
+            return posts
 
     async def update_publish_value(self, id):
-        session = await self.session()
-        post = session.query(Post).filter_by(id=id).first()
-        if post:
-            post.publish = 1
-            session.commit()
-        else:
-            print("запись не найдена")
+        with await self.session() as session:
+            post = session.query(Post).filter_by(id=id).first()
+            if post:
+                post.publish = 1
+                session.commit()
+            else:
+                print("запись не найдена")
 
     async def delete_total_records(self, max_count):
-        session = await self.session()
-        total_count = session.query(Post).count()
-        if total_count > max_count:
-            old_posts = session.query(Post).order_by(desc(Post.created_at)).limit(50).all()
-            if old_posts:
-                for post in old_posts:
-                    session.delete(post)
-                session.commit()
+        with await self.session() as session:
+            total_count = session.query(Post).count()
+            if total_count > max_count:
+                old_posts = session.query(Post).order_by(desc(Post.created_at)).limit(50).all()
+                if old_posts:
+                    for post in old_posts:
+                        session.delete(post)
+                    session.commit()

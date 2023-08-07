@@ -28,6 +28,7 @@ async def start_program(message:types.Message):
     await db.create_db()
     vk_m = VK_Manager(token=VK_TOKEN)
     while True:
+
         await vk_m.add_post(GROUP_IDs)
         posts = await db.get_not_publish_post()
         for post in posts:
